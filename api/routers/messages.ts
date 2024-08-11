@@ -5,7 +5,21 @@ const messageRouter = express.Router();
 messageRouter.get('/', async (req, res) => {
   const messages = await fileDb.getItems();
 
-  return res.send(messages);
+  if (req.query.datetime) {
+    const queryDate = req.query.datetime as string;
+    const date = new Date(queryDate);
+    if (isNaN(date.getDate())) {
+      return res.status(400).send({ error: 'Invalid datetime' });
+    }
+
+    if (messages[messages.length - 1].createdAt > queryDate) {
+      return res.send(messages.filter((item) => item.createdAt > queryDate));
+    } else {
+      return res.send([]);
+    }
+  }
+
+  return res.send(messages.slice(-30));
 });
 
 messageRouter.post('/', async (req, res) => {
